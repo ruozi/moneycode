@@ -1,0 +1,114 @@
+#include <opencv2/opencv.hpp>
+#include <stdlib.h>
+#include <stdio.h>
+#include <vector>
+
+using namespace cv;
+
+int img_process(const char* input_img_name,const char* output_img_name)
+{
+	const double minarea = 60;
+	const double minthresh = 140;
+
+	Mat mv_green,mv_closing;
+	std::vector<Mat> mv;
+	std::vector< vector<Point> > contours;
+
+	Mat img=imread(input_img_name);
+	if(img.empty())
+	{
+		fprintf(stderr,"Can not load image %s\n",input_img_name);
+		return -1;
+	}
+
+	Rect rect(0,200,640,120);
+	Mat dst(640,120,CV_8UC3);
+	img(rect).copyTo(dst);
+
+#ifdef __ROTATE__
+	flip(dst,dst,-1);
+#endif
+
+
+	split(dst,mv);
+	threshold(mv[1],mv_green,minthresh,255,CV_THRESH_BINARY_INV);
+	
+	//closing
+	Mat kernal=getStructuringElement(MORPH_ELLIPSE,cvSize(3,3));
+	morphologyEx(mv_green,mv_closing,MORPH_CLOSE,kernal);
+
+	//contours
+	findContours(mv_closing,contours,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE);
+
+	//delete area smaller than min_area
+	std::vector< vector<Point> >::iterator iter=contours.begin();
+	while(iter!=contours.end())
+	{
+		double area=fabs(contourArea(*iter));
+		if(area<minarea)
+			iter=contours.erase(iter);
+		else
+			iter++;
+	}
+
+	//drawcontours
+	Mat m_bin(dst.rows,dst.cols,CV_8UC1,Scalar(255,255,255));
+	drawContours(m_bin,contours,-1,Scalar(0,0,0),CV_FILLED,8);
+
+	imwrite(output_img_name,m_bin);
+
+	return 0;
+}
+#ifdef __DEBUG__
+int main(int argc,char* argv[])
+{
+	const char* imagename = "test-mmap.jpg";
+	const double minarea = 60;
+
+	Mat mv_green,mv_closing;
+	std::vector<Mat> mv;
+	std::vector< vector<Point> > contours;
+
+	Mat img=imread(imagename);
+	if(img.empty())
+	{
+		fprintf(stderr,"Can not load image %s\n",imagename);
+		return -1;
+	}
+
+	Rect rect(35,115,225,45);
+	Mat dst(225,45,CV_8UC3);
+	img(rect).copyTo(dst);
+
+
+	split(dst,mv);
+	threshold(mv[1],mv_green,80,255,CV_THRESH_BINARY_INV);
+	
+	//closing
+	Mat kernal=getStructuringElement(MORPH_ELLIPSE,cvSize(2,2));
+	morphologyEx(mv_green,mv_closing,MORPH_CLOSE,kernal);
+
+	//contours
+	findContours(mv_closing,contours,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE);
+
+	//delete area smaller than min_area
+	std::vector< vector<Point> >::iterator iter=contours.begin();
+	while(iter!=contours.end())
+	{
+		double area=fabs(contourArea(*iter));
+		printf("%.2f\n",area);
+		if(area<minarea)
+			iter=contours.erase(iter);
+		else
+			iter++;
+	}
+
+	//drawcontours
+	Mat m_bin(dst.rows,dst.cols,CV_8UC1,Scalar(255,255,255));
+	drawContours(m_bin,contours,-1,Scalar(0,0,0),CV_FILLED,8);
+
+	imwrite("img_process.jpg",m_bin);
+
+	return 0;
+}
+#endif

@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <string.h>
+#include "recog.h"
+
+int recog(const char * input_img_name,char *output)
+{
+	tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+	if (api->Init(NULL,"money")){
+		fprintf(stderr, "Could not initialize tesseract.\n");
+		exit(1);
+	}
+
+	api->SetVariable("tessedit_char_whitelist","0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ");
+	Pix *image = pixRead(input_img_name);
+	api->SetImage(image);
+
+	strcpy(output,api->GetUTF8Text());
+	printf("OCR output:%s\n",output);
+
+	api->End();
+	pixDestroy(&image);
+
+	return 0;
+}
+
+#ifdef __DEBUG__
+int main()
+{
+	char *text_out;
+
+	tesseract::TessBaseAPI *api = new tesseract::TessBaseAPI();
+	if (api->Init(NULL,"eng")){
+		fprintf(stderr, "Could not initialize tesseract.\n");
+		exit(1);
+	}
+
+	Pix *image = pixRead("test.jpg");
+	api->SetImage(image);
+
+	text_out = api->GetUTF8Text();
+	printf("OCR output:%s\n",text_out);
+
+	api->End();
+	delete[] text_out;
+	pixDestroy(&image);
+
+	return 0;
+
+}
+#endif
