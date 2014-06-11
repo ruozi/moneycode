@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 	int CommFd;
 	int ButtonsFd;
 	int LcmFd;
+	int PwmFd;
 
 	int number = 0;
 	int current = 0;
@@ -106,6 +107,10 @@ int main(int argc, char **argv)
 	if(fcntl(CommFd, F_SETFL, O_NONBLOCK) < 0)
 		Error("Unable set to NONBLOCK mode");
 
+	PwmFd = open("/dev/pwm",0);
+	if (PwmFd < 0)
+		Error("Unable to open beep");
+	
 	memset(&TtyAttr, 0, sizeof(struct termios));
 	TtyAttr.c_iflag = IGNPAR;
 	TtyAttr.c_cflag = DeviceSpeed | HUPCL | ByteBits | CREAD | CLOCAL;
@@ -238,6 +243,18 @@ int main(int argc, char **argv)
 				Error("Unable to read buttons!");
 				exit(1);
 			}
+
+			//Judge if button down
+			int i=0;
+			for(i=0;i<6;i++)
+			{
+				if('0'!=current_buttons[i])
+				{
+					beep(PwmFd);
+					break;
+				}
+			}
+			
 
 			switch(status)
 			{
@@ -541,6 +558,10 @@ int main(int argc, char **argv)
 	close(CommFd);
 	close(ButtonsFd);
 	close(LcmFd);
+
+	ioctl(PwmFd,PWM_IOCTL_STOP);
+	close(PwmFd);
+
 	free(ocr_output);
 	free(buf);
 	free(output_buf);
