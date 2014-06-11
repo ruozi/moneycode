@@ -20,6 +20,42 @@ static void *thread_print_recog(void *Fd)
 	return ((void *)0);
 }
 
+static int set_img_name(bool istest,bool isprocessed,char *name)
+{
+	time_t now;
+	struct tm *timenow;
+
+	time(&now);
+	timenow = localtime(&now);
+
+	if(istest)
+	{
+		if(isprocessed)
+		{
+			memset(name,0,64);
+			sprintf(name,"%d-%d-%d-%d-%d-%d_test_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+		}
+		else
+		{
+			memset(name,0,64);
+			sprintf(name,"%d-%d-%d-%d-%d-%d_test.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+		}
+	}else
+	{
+		if(isprocessed)
+		{
+			memset(name,0,64);
+			sprintf(name,"%d-%d-%d-%d-%d-%d_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+		}
+		else
+		{
+			memset(name,0,64);
+			sprintf(name,"%d-%d-%d-%d-%d-%d.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+		}
+	}
+		
+	return 0;
+}
 static void Error(const char *Msg)
 {
 	fprintf(stderr, "%s\n", Msg);
@@ -58,8 +94,8 @@ int main(int argc, char **argv)
 	const unsigned char CODESET[36] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
 
 
-	const char * imgname = "test.jpg";
-	const char * imgprocname = "test_proc.jpg";
+	char *imgname = (char *)malloc(64*sizeof(char));
+	char *imgprocname = (char *)malloc(64*sizeof(char));
 
 	int CommFd;
 	int ButtonsFd;
@@ -267,10 +303,9 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 						printf("Button 1 down!\n");
 
-#endif
 						clock_t start,end;
 						start=clock();
-
+#endif
 						pthread_t id;
 						int ret;
 
@@ -279,6 +314,9 @@ int main(int argc, char **argv)
 							Error("Create thread error!");
 
 						//Take photo ,recognize it and display it
+						set_img_name(PHOTO_TEST,PHOTO_ORIGIN,imgname);
+						set_img_name(PHOTO_TEST,PHOTO_PROCESSED,imgprocname);
+
 						int ret_camera = get_pic(imgname);
 						if(ret_camera == EXIT_FAILURE)
 							Error("Image is not correctly taken!\n");
@@ -296,9 +334,9 @@ int main(int argc, char **argv)
 						smart_proc(ocr_output);
 #ifdef __DEBUG_P__
 						printf("Result is decorated\n");
-#endif
+						
 						end = clock();
-#ifdef __DEBUG_P__
+
 						printf("Time cost:%d ms\n",(int)(end-start));
 #endif
 						InitLcd(LcmFd);
@@ -333,6 +371,10 @@ int main(int argc, char **argv)
 						ret=pthread_create(&id,NULL,&thread_print_recog,&LcmFd);
 						if(ret!=0)
 							Error("Create thread error!");
+						
+						//get name
+						set_img_name(PHOTO_RECOG,PHOTO_ORIGIN,imgname);
+						set_img_name(PHOTO_RECOG,PHOTO_PROCESSED,imgprocname);
 
 						int ret_camera = get_pic(imgname);
 						if(ret_camera == EXIT_FAILURE)
@@ -566,6 +608,8 @@ int main(int argc, char **argv)
 	free(buf);
 	free(output_buf);
 	free(money_buf);
+	free(imgname);
+	free(imgprocname);
 	return 0;
 }//main
 

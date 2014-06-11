@@ -16,4 +16,10 @@
 #define STATUS_MODIFICATION 3
 
 #define PWM_IOCTL_STOP 0
+
+#define PHOTO_TEST true
+#define PHOTO_RECOG false
+#define PHOTO_PROCESSED true
+#define PHOTO_ORIGIN false
+
 #endif
