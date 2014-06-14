@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
 int trim_space(char * str)
 {
 	char *trim = (char *)malloc(15*sizeof(char));
@@ -112,6 +118,99 @@ void decorate_buffer(char * input,char* output,int n)
 
 	memcpy(output+13*n+17,&lrc,1);
 }
+
+static int f_move(char* srcname,char* dstname)
+{
+	int srcfd,dstfd;
+	struct stat s,t;
+	char c;
+	srcfd=open(srcname,O_RDONLY);
+	dstfd=open(dstname,O_RDWR|O_CREAT);
+	while(read(srcfd,&c,1)>0)
+		write(dstfd,&c,1);
+	fstat(srcfd,&s);
+	chown(dstname,s.st_uid,s.st_gid);
+	chmod(dstname,s.st_mode);
+
+	close(srcfd);
+	close(dstfd);
+
+	remove(srcname);
+}
+
+int d_copy(const char* srcpath,const char* dstpath)
+{
+	struct dirent *sp,*tp;
+	char spath[100],tpath[100],temp_spath[100],temp_tpath[100];
+	struct stat sbuf,tbuf,temp_sbuf,temp_tbuf;
+	char judge;
+	DIR *dir_s,*dir_t;
+
+	dir_s=opendir(srcpath);
+	if(dir_s==NULL)
+	{
+		return 1;
+	}
+	if(stat(srcpath,&sbuf))
+	{
+		return 2;
+	}
+	dir_t=opendir(dstpath);
+	if(dir_t==NULL)
+	{
+		mkdir(dstpath,sbuf.st_mode);
+		chown(dstpath,sbuf.st_uid,sbuf.st_gid);
+		dir_t=opendir(dstpath);
+	}
+	else
+	{
+		chmod(dstpath,sbuf.st_mode);
+		chown(dstpath,sbuf.st_uid,sbuf.st_gid);
+	}
+	strcpy(temp_spath,srcpath);
+	strcpy(temp_tpath,dstpath);
+	
+#ifdef __DEBUG_P__
+	printf("Begin copy ....../n");
+#endif
+
+	while((sp=readdir(dir_s))!=NULL)
+	{
+		if(strcmp(sp->d_name,".")!=0 && strcmp(sp->d_name,"..")!=0)
+		{
+#ifdef __DEBUG_P__
+			printf("Processing file:%s\n",sp->d_name);
+#endif
+
+			strcat(temp_spath,"/");
+			strcat(temp_spath,sp->d_name);
+			strcat(temp_tpath,"/");
+			strcat(temp_tpath,sp->d_name);
+			lstat(temp_spath,&sbuf);
+			temp_sbuf.st_mode=sbuf.st_mode;
+
+			if((S_IFMT&temp_sbuf.st_mode)==S_IFREG)
+			{
+#ifdef __DEBUG_P__
+				printf("Copy file %s...\n",temp_spath);
+#endif
+				f_move(temp_spath,temp_tpath);
+				strcpy(temp_tpath,dstpath);
+				strcpy(temp_spath,srcpath);
+
+			}
+		}
+	}
+
+#ifdef __DEBUG_P__
+	printf("Copy end!\n");
+#endif
+	closedir(dir_t);
+	closedir(dir_s);
+	return 0;
+}
+
+
 
 
 

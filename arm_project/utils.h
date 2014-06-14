@@ -6,4 +6,6 @@ int smart_proc(char * ocr_output);
 
 void decorate_buffer(char *input,char *output, int n);
 
+int d_copy(const char *srcpath,const char *dstpath);
+
 #endif

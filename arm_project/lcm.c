@@ -254,6 +254,39 @@ int print_dup(int fd)
 	write_data(fd,'!');
 
 }
+
+int print_noudisk(int fd)
+{
+	InitLcd(fd);
+
+	write_data(fd,'N');
+	write_data(fd,'O');
+	write_data(fd,' ');
+	write_data(fd,'U');
+	write_data(fd,'D');
+	write_data(fd,'I');
+	write_data(fd,'S');
+	write_data(fd,'K');
+	write_data(fd,'!');
+}
+
+int print_copy(int fd)
+{
+	InitLcd(fd);
+
+	write_data(fd,'C');
+	write_data(fd,'O');
+	write_data(fd,'P');
+	write_data(fd,'Y');
+	write_data(fd,'I');
+	write_data(fd,'N');
+	write_data(fd,'G');
+	write_data(fd,'.');
+	write_data(fd,'.');
+	write_data(fd,'.');
+
+}
+
 #ifdef __DEBUG__
 int main(int argc, char** argv)
 {

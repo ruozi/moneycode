@@ -26,4 +26,8 @@ int print_error(int fd);
 int print_nosdcard(int fd);
 
 int print_dup(int fd);
+
+int print_noudisk(int fd);
+
+int print_copy(int fd);
 #endif

@@ -109,6 +109,8 @@ int main(int argc, char **argv)
 	int pos = 0;
 	int index = 0;
 	int status = STATUS_SERIAL_READY;
+	int count_btn5 = 0;
+	int count_btn6 = 0;
 
 	ReadBuffer *buf = (ReadBuffer *)malloc(sizeof(ReadBuffer));
 	char * output_buf;
@@ -370,6 +372,51 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 						printf("LCD displayed!\n");
 #endif
+					}else if('0'!=current_buttons[4]){
+						//Press button 5 three times to copy test images.
+#ifdef __DEBUG_P__
+						printf("Button 5 down!\n");
+#endif
+						count_btn5++;
+						if(3==count_btn5)
+						{
+							count_btn5=0;
+
+							if(0!=access("/dev/udisk",F_OK))
+							{
+								print_noudisk(LcmFd);
+							}else{
+								print_copy(LcmFd);
+
+								d_copy("/sdcard/test","/udisk/test");
+
+								print_complete(LcmFd);
+							}
+							
+						}
+					}else if('0'!=current_buttons[5]){
+						//Press button 6 three times to copy recog images.
+#ifdef __DEBUG_P__
+						printf("Button 6 down!\n");
+#endif
+						count_btn6++;
+						if(3==count_btn6)
+						{
+							count_btn5=0;
+
+							if(0!=access("/dev/udisk",F_OK))
+							{
+								print_noudisk(LcmFd);
+							}else{
+								print_copy(LcmFd);
+
+								d_copy("/sdcard/recog","/udisk/recog");
+
+								print_complete(LcmFd);
+							}
+							
+						}
+	
 					}
 					break;
 
@@ -442,7 +489,7 @@ int main(int argc, char **argv)
 							//duplicate
 							current--;
 							print_dup(LcmFd);
-							
+
 							sleep(1);
 							print_next(LcmFd);
 						}
