@@ -22,4 +22,8 @@ int print_complete(int fd);
 int print_recog(int fd);
 
 int print_error(int fd);
+
+int print_nosdcard(int fd);
+
+int print_dup(int fd);
 #endif

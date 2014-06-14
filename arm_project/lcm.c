@@ -220,6 +220,40 @@ int print_error(int fd)
 	write_data(fd,'R');
 
 }
+
+int print_nosdcard(int fd)
+{
+	InitLcd(fd);
+
+	write_data(fd,'N');
+	write_data(fd,'O');
+	write_data(fd,' ');
+	write_data(fd,'S');
+	write_data(fd,'D');
+	write_data(fd,'C');
+	write_data(fd,'A');
+	write_data(fd,'R');
+	write_data(fd,'D');
+	write_data(fd,'!');
+
+}
+
+int print_dup(int fd)
+{
+	InitLcd(fd);
+
+	write_data(fd,'D');
+	write_data(fd,'U');
+	write_data(fd,'P');
+	write_data(fd,'L');
+	write_data(fd,'I');
+	write_data(fd,'C');
+	write_data(fd,'A');
+	write_data(fd,'T');
+	write_data(fd,'E');
+	write_data(fd,'!');
+
+}
 #ifdef __DEBUG__
 int main(int argc, char** argv)
 {

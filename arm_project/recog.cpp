@@ -24,14 +24,35 @@ int recog(const char * input_img_name,char *output)
 	api_alpha->SetImage(image);
 	api_digit->SetImage(image);
 
-	strcpy(output,api_digit->GetUTF8Text());
-	memcpy(output,api_alpha->GetUTF8Text(),4);
+	char *digits = (char *)malloc(15*sizeof(char));
+	strcpy(digits,api_digit->GetUTF8Text());
 
+	char *trim = (char *)malloc(15*sizeof(char));
+	int i=0;
+	int len=0;
+	for(i=0;digits[i]!='\0';i++)
+	{
+		if(digits[i]>='0' && digits[i]<='9')
+			trim[len++]=digits[i];
+	}
+	strcpy(digits,trim);
+	free(trim);
+
+	memcpy(output,api_alpha->GetUTF8Text(),4);
+	memcpy(output+4,digits+len-6,6);
+#ifdef __DEBUG_P__
+	printf("OCR digit:%s\n",api_digit->GetUTF8Text());
+	printf("OCR digit length:%d\n",strlen(api_digit->GetUTF8Text()));
+	printf("OCR digit trimmed:%s\n",digits);
+	printf("OCR digit trimmed length:%d\n",strlen(digits));
+	printf("OCR alpha:%s\n",api_alpha->GetUTF8Text());
 	printf("OCR output:%s\n",output);
+#endif
 
 	api_alpha->End();
 	api_digit->End();
 	pixDestroy(&image);
+    free(digits);
 
 	delete(api_alpha);
 	delete(api_digit);

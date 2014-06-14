@@ -1,4 +1,5 @@
 #include <signal.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <termio.h>
@@ -33,24 +34,24 @@ static int set_img_name(bool istest,bool isprocessed,char *name)
 		if(isprocessed)
 		{
 			memset(name,0,64);
-			sprintf(name,"%d-%d-%d-%d-%d-%d_test_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/test/%d-%d-%d-%d-%d-%d_test_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 		else
 		{
 			memset(name,0,64);
-			sprintf(name,"%d-%d-%d-%d-%d-%d_test.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/test/%d-%d-%d-%d-%d-%d_test.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 	}else
 	{
 		if(isprocessed)
 		{
 			memset(name,0,64);
-			sprintf(name,"%d-%d-%d-%d-%d-%d_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/recog/%d-%d-%d-%d-%d-%d_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 		else
 		{
 			memset(name,0,64);
-			sprintf(name,"%d-%d-%d-%d-%d-%d.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/recog/%d-%d-%d-%d-%d-%d.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 	}
 		
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
 	int ButtonsFd;
 	int LcmFd;
 	int PwmFd;
+	int LedFd;
 
 	int number = 0;
 	int current = 0;
@@ -146,6 +148,13 @@ int main(int argc, char **argv)
 	PwmFd = open("/dev/pwm",0);
 	if (PwmFd < 0)
 		Error("Unable to open beep");
+
+	LedFd = open("/dev/leds",0);
+	if(LedFd < 0)
+		Error("Unable to open led");
+	
+	backlight_on(LedFd);
+	illumination_on(LedFd);
 	
 	memset(&TtyAttr, 0, sizeof(struct termios));
 	TtyAttr.c_iflag = IGNPAR;
@@ -163,6 +172,18 @@ int main(int argc, char **argv)
 
 	while(1)
 	{
+		if(0!=access("/dev/sdcard",F_OK) && status!=STATUS_NO_SDCARD)
+		{
+			status = STATUS_NO_SDCARD;
+			print_nosdcard(LcmFd);
+		}
+
+		if(-1!=access("/dev/sdcard",F_OK) && status == STATUS_NO_SDCARD)
+		{
+			status = STATUS_SERIAL_READY;
+			print_ready(LcmFd);
+		}
+
 #ifdef __DEBUG_P__
 		switch(status){
 			case STATUS_SERIAL_READY:
@@ -290,7 +311,7 @@ int main(int argc, char **argv)
 					break;
 				}
 			}
-			
+
 
 			switch(status)
 			{
@@ -334,7 +355,7 @@ int main(int argc, char **argv)
 						smart_proc(ocr_output);
 #ifdef __DEBUG_P__
 						printf("Result is decorated\n");
-						
+
 						end = clock();
 
 						printf("Time cost:%d ms\n",(int)(end-start));
@@ -371,7 +392,7 @@ int main(int argc, char **argv)
 						ret=pthread_create(&id,NULL,&thread_print_recog,&LcmFd);
 						if(ret!=0)
 							Error("Create thread error!");
-						
+
 						//get name
 						set_img_name(PHOTO_RECOG,PHOTO_ORIGIN,imgname);
 						set_img_name(PHOTO_RECOG,PHOTO_PROCESSED,imgprocname);
@@ -398,23 +419,52 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 						printf("LCD Initialized\n");
 #endif
+						//Judge if it is same
 						int i=0;
-						for(i=0;i<10;i++)
-							write_data(LcmFd,ocr_output[i]);
-						write_data(LcmFd,' ');
+						int j=0;
+						bool dup = false;
+						for(i=0;i<current-1;i++)
+						{
+							for(j=0;j<10;j++)
+							{
+								if(money_buf[13*i+j] != ocr_output[j])
+									break;
+							}
+							if(j >= 10)
+							{
+								dup=true;
+								break;
+							}
+						}
 
-						if(current/10)
-							write_data(LcmFd,current/10+'0');
-						write_data(LcmFd,current % 10 +'0');
-						write_data(LcmFd,'/');
-						if(number/10)
-							write_data(LcmFd,number/10+'0');
-						write_data(LcmFd,number % 10 + '0');
+						if(dup)
+						{
+							//duplicate
+							current--;
+							print_dup(LcmFd);
+							
+							sleep(1);
+							print_next(LcmFd);
+						}
+						else
+						{
+							for(i=0;i<10;i++)
+								write_data(LcmFd,ocr_output[i]);
+							write_data(LcmFd,' ');
+
+							if(current/10)
+								write_data(LcmFd,current/10+'0');
+							write_data(LcmFd,current % 10 +'0');
+							write_data(LcmFd,'/');
+							if(number/10)
+								write_data(LcmFd,number/10+'0');
+							write_data(LcmFd,number % 10 + '0');
 #ifdef __DEBUG_P__
-						printf("LCD displayed!\n");
+							printf("LCD displayed!\n");
 #endif
 
-						status = STATUS_DISPLAY;
+							status = STATUS_DISPLAY;
+						}
 					}
 					break;
 
@@ -603,6 +653,8 @@ int main(int argc, char **argv)
 
 	ioctl(PwmFd,PWM_IOCTL_STOP);
 	close(PwmFd);
+
+	close(LedFd);
 
 	free(ocr_output);
 	free(buf);

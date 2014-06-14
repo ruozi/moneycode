@@ -1,22 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+int trim_space(char * str)
+{
+	char *trim = (char *)malloc(15*sizeof(char));
+	int i=0;
+	int len=0;
+
+	for(i=0;str[i]!='\0';i++)
+	{
+		if(str[i]!=' ')
+			trim[len++]=str[i];
+	}
+	trim[len]='\0';
+	strcpy(str,trim);
+	free(trim);
+}
 
 int smart_proc(char * ocr_output)
 {
 	//cut to 10
-	int len=0;
 	int i=0;
+	int len=0;
 	int alpha_count = 0;
-	char *trim = (char *)malloc(15*sizeof(char));
 
-	for(i=0;ocr_output[i]!='\0';i++){
-		if(ocr_output[i]!=' ')
-			trim[len++]=ocr_output[i];
-	}
-	trim[len]='\0';
-	strcpy(ocr_output,trim);
-	free(trim);
+	trim_space(ocr_output);
+
+	len = strlen(ocr_output);
 
 	if(len < 10){
 		for(i=len;i<10;i++)
