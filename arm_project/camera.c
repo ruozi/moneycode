@@ -40,10 +40,9 @@ extern "C"{
 
 static unsigned short image_width = 640;
 static unsigned short image_height = 480;
-static unsigned char *image_buffer;
 static unsigned short optimization = 75;
 
-int write_JPEG_file (const char * filename, int quality)
+int write_JPEG_file (const char * filename, int quality,unsigned char * image_buffer)
 {
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
@@ -103,7 +102,7 @@ static void save_picture(unsigned char *src,const char *imgname)
 	unsigned char *src_cr = src_cb+image_width*image_height/2;
 	//int palette = ;
 
-	image_buffer = (unsigned char*)malloc(w*h*3);	//RGB24
+	unsigned char *image_buffer = (unsigned char*)malloc(w*h*3);	//RGB24
 	if(image_buffer==NULL) {
 		printf("allocate memory fail in saving picture!\n");
 		return;
@@ -121,7 +120,7 @@ static void save_picture(unsigned char *src,const char *imgname)
 		}
 	}
 
-	write_JPEG_file(imgname, optimization);
+	write_JPEG_file(imgname, optimization,image_buffer);
 	free(image_buffer);
 }
 

@@ -119,29 +119,10 @@ void decorate_buffer(char * input,char* output,int n)
 	memcpy(output+13*n+17,&lrc,1);
 }
 
-static int f_move(char* srcname,char* dstname)
-{
-	int srcfd,dstfd;
-	struct stat s,t;
-	char c;
-	srcfd=open(srcname,O_RDONLY);
-	dstfd=open(dstname,O_RDWR|O_CREAT);
-	while(read(srcfd,&c,1)>0)
-		write(dstfd,&c,1);
-	fstat(srcfd,&s);
-	chown(dstname,s.st_uid,s.st_gid);
-	chmod(dstname,s.st_mode);
-
-	close(srcfd);
-	close(dstfd);
-
-	remove(srcname);
-}
-
 int d_copy(const char* srcpath,const char* dstpath)
 {
 	struct dirent *sp,*tp;
-	char spath[100],tpath[100],temp_spath[100],temp_tpath[100];
+	char spath[100],tpath[100],temp_spath[100],temp_tpath[100],command[100];
 	struct stat sbuf,tbuf,temp_sbuf,temp_tbuf;
 	char judge;
 	DIR *dir_s,*dir_t;
@@ -194,7 +175,9 @@ int d_copy(const char* srcpath,const char* dstpath)
 #ifdef __DEBUG_P__
 				printf("Copy file %s...\n",temp_spath);
 #endif
-				f_move(temp_spath,temp_tpath);
+
+				sprintf(command,"mv %s %s",temp_spath,temp_tpath);
+				system(command);
 				strcpy(temp_tpath,dstpath);
 				strcpy(temp_spath,srcpath);
 
