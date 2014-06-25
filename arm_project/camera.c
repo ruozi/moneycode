@@ -136,7 +136,6 @@ int get_pic(const char *imgname)
 	int i;
 
 	int type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	FILE* file_fd = fopen("rgb565.jpg", "w");
 
 	/* A1 打开摄像头驱动 */
 	v4l2_fd = open(V4L2_DEV_NODE, O_RDWR);
@@ -195,9 +194,6 @@ int get_pic(const char *imgname)
 	printf("save: %s %d\n", __func__, __LINE__);
 	save_picture(buf,imgname);
 	printf("start write: %s %d\n", __func__, __LINE__);
-	fwrite(buf, buf_size, 1, file_fd);
-	printf("write ok: %s %d\n", __func__, __LINE__);
-	//memcpy(fbmem, buf, buf_size);
 
 
 	if((ioctl(v4l2_fd, VIDIOC_STREAMON, &type))<0)
@@ -208,7 +204,6 @@ int get_pic(const char *imgname)
 	else
 		printf("success ioctl streamon\n");
 
-	remove("rgb565.jpg");
 
 	free(buf);
 	close(v4l2_fd);

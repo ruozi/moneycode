@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "utils.h"
 
 int trim_space(char * str)
 {
@@ -29,12 +30,14 @@ int smart_proc(char * ocr_output)
 	int i=0;
 	int len=0;
 	int alpha_count = 0;
+	int res=PROC_OK;
 
 	trim_space(ocr_output);
 
 	len = strlen(ocr_output);
 
 	if(len < 10){
+		res = PROC_NOK;
 		for(i=len;i<10;i++)
 			ocr_output[i]='0';
 	}else if(len>10)
@@ -89,7 +92,7 @@ int smart_proc(char * ocr_output)
 				break;
 			}
 	}
-	return 0;
+	return res;
 }
 
 void decorate_buffer(char * input,char* output,int n)
@@ -139,8 +142,9 @@ int d_copy(const char* srcpath,const char* dstpath)
 	dir_t=opendir(dstpath);
 	if(dir_t==NULL)
 	{
-		mkdir(dstpath,sbuf.st_mode);
-		chown(dstpath,sbuf.st_uid,sbuf.st_gid);
+		sprintf(command,"mkdir %s",dstpath);
+		system(command);
+		system("sync");
 		dir_t=opendir(dstpath);
 	}
 	else
@@ -178,6 +182,7 @@ int d_copy(const char* srcpath,const char* dstpath)
 
 				sprintf(command,"mv %s %s",temp_spath,temp_tpath);
 				system(command);
+				system("sync");
 				strcpy(temp_tpath,dstpath);
 				strcpy(temp_spath,srcpath);
 

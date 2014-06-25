@@ -14,6 +14,15 @@
 #include "moneycode.h"
 #include <pthread.h>
 
+static void *thread_beep_twice(void *Fd)
+{
+	beep(*(int*)Fd);
+	usleep(500000);
+	beep(*(int*)Fd);
+
+	return ((void *)0);
+}
+
 static void *thread_print_recog(void *Fd)
 {
 	print_recog(*(int*)Fd);
@@ -354,7 +363,13 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 						printf("Text is recognized!\n");
 #endif
-						smart_proc(ocr_output);
+						if(PROC_NOK==smart_proc(ocr_output))
+						{
+							ret=pthread_create(&id,NULL,&thread_beep_twice,&PwmFd);
+							if(ret!=0)
+								Error("Create thread error!");
+						}
+
 #ifdef __DEBUG_P__
 						printf("Result is decorated\n");
 
@@ -392,7 +407,7 @@ int main(int argc, char **argv)
 
 								print_complete(LcmFd);
 							}
-							
+
 						}
 					}else if('0'!=current_buttons[5]){
 						//Press button 6 three times to copy recog images.
@@ -402,7 +417,7 @@ int main(int argc, char **argv)
 						count_btn6++;
 						if(3==count_btn6)
 						{
-							count_btn5=0;
+							count_btn6=0;
 
 							if(0!=access("/dev/udisk",F_OK))
 							{
@@ -414,9 +429,9 @@ int main(int argc, char **argv)
 
 								print_complete(LcmFd);
 							}
-							
+
 						}
-	
+
 					}
 					break;
 
@@ -458,7 +473,13 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 						printf("Text is recognized!\n");
 #endif
-						smart_proc(ocr_output);
+						if(PROC_NOK==smart_proc(ocr_output))
+						{
+							ret=pthread_create(&id,NULL,&thread_beep_twice,&PwmFd);
+							if(ret!=0)
+								Error("Create thread error!");
+						}
+
 #ifdef __DEBUG_P__
 						printf("Result is decorated\n");
 #endif
@@ -520,6 +541,98 @@ int main(int argc, char **argv)
 #ifdef __DEBUG_P__
 					printf("Case display!\n");
 #endif
+					if('0'!=current_buttons[1]){
+#ifdef __DEBUG_P__
+						printf("Button 2 down!\n");
+						printf("Recog again!\n");
+#endif
+						//Take photo ,recognize it and display it with progress
+
+						pthread_t id;
+						int ret;
+
+						ret=pthread_create(&id,NULL,&thread_print_recog,&LcmFd);
+						if(ret!=0)
+							Error("Create thread error!");
+
+						//get name
+						set_img_name(PHOTO_RECOG,PHOTO_ORIGIN,imgname);
+						set_img_name(PHOTO_RECOG,PHOTO_PROCESSED,imgprocname);
+
+						int ret_camera = get_pic(imgname);
+						if(ret_camera == EXIT_FAILURE)
+							Error("Image is not correctly taken!\n");
+#ifdef __DEBUG_P__
+						printf("Image is taken!\n");
+#endif
+						img_process(imgname,imgprocname);
+#ifdef __DEBUG_P__
+						printf("Image processed!\n");
+#endif
+						recog(imgprocname,ocr_output);
+#ifdef __DEBUG_P__
+						printf("Text is recognized!\n");
+#endif
+						if(PROC_NOK==smart_proc(ocr_output))
+						{
+							ret=pthread_create(&id,NULL,&thread_beep_twice,&PwmFd);
+							if(ret!=0)
+								Error("Create thread error!");
+						}
+
+#ifdef __DEBUG_P__
+						printf("Result is decorated\n");
+#endif
+						InitLcd(LcmFd);
+#ifdef __DEBUG_P__
+						printf("LCD Initialized\n");
+#endif
+						//Judge if it is same
+						int i=0;
+						int j=0;
+						bool dup = false;
+						for(i=0;i<current-1;i++)
+						{
+							for(j=0;j<10;j++)
+							{
+								if(money_buf[13*i+j] != ocr_output[j])
+									break;
+							}
+							if(j >= 10)
+							{
+								dup=true;
+								break;
+							}
+						}
+
+						if(dup)
+						{
+							//duplicate
+							print_dup(LcmFd);
+
+							sleep(1);
+							print_next(LcmFd);
+						}
+						else
+						{
+							for(i=0;i<10;i++)
+								write_data(LcmFd,ocr_output[i]);
+							write_data(LcmFd,' ');
+
+							if(current/10)
+								write_data(LcmFd,current/10+'0');
+							write_data(LcmFd,current % 10 +'0');
+							write_data(LcmFd,'/');
+							if(number/10)
+								write_data(LcmFd,number/10+'0');
+							write_data(LcmFd,number % 10 + '0');
+#ifdef __DEBUG_P__
+							printf("LCD displayed!\n");
+#endif
+						}
+					}
+
+
 					if('0'!=current_buttons[2]){
 #ifdef __DEBUG_P__
 						printf("Button 3 down!\n");
