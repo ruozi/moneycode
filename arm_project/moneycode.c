@@ -13,6 +13,7 @@
 #include <getopt.h>
 #include "moneycode.h"
 #include <pthread.h>
+#include <dirent.h>
 
 static void *thread_beep_twice(void *Fd)
 {
@@ -40,6 +41,12 @@ static int set_img_name(bool istest,bool isprocessed,char *name)
 
 	if(istest)
 	{
+		DIR *dir;
+		dir=opendir("/sdcard/test");
+		if(dir==NULL)
+		{
+			system("mkdir /sdcard/test");
+		}
 		if(isprocessed)
 		{
 			memset(name,0,64);
@@ -52,6 +59,12 @@ static int set_img_name(bool istest,bool isprocessed,char *name)
 		}
 	}else
 	{
+		DIR *dir;
+		dir=opendir("/sdcard/recog");
+		if(dir==NULL)
+		{
+			system("mkdir /sdcard/recog");
+		}
 		if(isprocessed)
 		{
 			memset(name,0,64);

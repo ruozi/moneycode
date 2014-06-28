@@ -25,20 +25,33 @@ int recog(const char * input_img_name,char *output)
 	api_digit->SetImage(image);
 
 	char *digits = (char *)malloc(15*sizeof(char));
+	char *alphas = (char *)malloc(15*sizeof(char));
+
 	strcpy(digits,api_digit->GetUTF8Text());
+	strcpy(alphas,api_alpha->GetUTF8Text());
 
 	char *trim = (char *)malloc(15*sizeof(char));
 	int i=0;
 	int len=0;
-	for(i=0;digits[i]!='\0';i++)
+
+	for(i=0,len=0;alphas[i]!='\0';i++)
+	{
+		if((alphas[i]>='0' && alphas[i]<='9')||(alphas[i]>='A' && alphas[i]<='Z'))
+			trim[len++]=alphas[i];
+	}
+	memcpy(trim+len,"\0",1);
+	strcpy(alphas,trim);
+	
+	for(i=0,len=0;digits[i]!='\0';i++)
 	{
 		if(digits[i]>='0' && digits[i]<='9')
 			trim[len++]=digits[i];
 	}
+	memcpy(trim+len,"\0",1);
 	strcpy(digits,trim);
 	free(trim);
 
-	memcpy(output,api_alpha->GetUTF8Text(),4);
+	memcpy(output,alphas,4);
 	memcpy(output+4,digits+len-6,6);
 #ifdef __DEBUG_P__
 	printf("OCR digit:%s\n",api_digit->GetUTF8Text());
@@ -53,6 +66,7 @@ int recog(const char * input_img_name,char *output)
 	api_digit->End();
 	pixDestroy(&image);
     free(digits);
+    free(alphas);
 
 	delete(api_alpha);
 	delete(api_digit);
