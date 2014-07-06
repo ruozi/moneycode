@@ -21,8 +21,8 @@ int img_process(const char* input_img_name,const char* output_img_name)
 		return -1;
 	}
 
-	Rect rect(120,280,460,100);
-	Mat dst(460,100,CV_8UC3);
+	Rect rect(120,230,480,90);
+	Mat dst(480,90,CV_8UC3);
 	img(rect).copyTo(dst);
 
 #ifdef __ROTATE__

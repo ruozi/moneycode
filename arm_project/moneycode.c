@@ -50,12 +50,12 @@ static int set_img_name(bool istest,bool isprocessed,char *name)
 		if(isprocessed)
 		{
 			memset(name,0,64);
-			sprintf(name,"/sdcard/test/%d-%d-%d-%d-%d-%d_test_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/test/%.4d-%.2d-%.2d-%.2d-%.2d-%.2d_test_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 		else
 		{
 			memset(name,0,64);
-			sprintf(name,"/sdcard/test/%d-%d-%d-%d-%d-%d_test.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/test/%.4d-%.2d-%.2d-%.2d-%.2d-%.2d_test.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 	}else
 	{
@@ -68,12 +68,12 @@ static int set_img_name(bool istest,bool isprocessed,char *name)
 		if(isprocessed)
 		{
 			memset(name,0,64);
-			sprintf(name,"/sdcard/recog/%d-%d-%d-%d-%d-%d_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/recog/%.4d-%.2d-%.2d-%.2d-%.2d-%.2d_proc.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 		else
 		{
 			memset(name,0,64);
-			sprintf(name,"/sdcard/recog/%d-%d-%d-%d-%d-%d.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
+			sprintf(name,"/sdcard/recog/%.4d-%.2d-%.2d-%.2d-%.2d-%.2d.jpg",timenow->tm_year+1900,timenow->tm_mon,timenow->tm_mday,timenow->tm_hour,timenow->tm_min,timenow->tm_sec);
 		}
 	}
 		

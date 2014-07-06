@@ -24,13 +24,13 @@ int recog(const char * input_img_name,char *output)
 	api_alpha->SetImage(image);
 	api_digit->SetImage(image);
 
-	char *digits = (char *)malloc(15*sizeof(char));
-	char *alphas = (char *)malloc(15*sizeof(char));
+	char *digits = (char *)malloc(255*sizeof(char));
+	char *alphas = (char *)malloc(255*sizeof(char));
 
 	strcpy(digits,api_digit->GetUTF8Text());
 	strcpy(alphas,api_alpha->GetUTF8Text());
 
-	char *trim = (char *)malloc(15*sizeof(char));
+	char *trim = (char *)malloc(255*sizeof(char));
 	int i=0;
 	int len=0;
 

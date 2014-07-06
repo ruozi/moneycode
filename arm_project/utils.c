@@ -183,10 +183,9 @@ int d_copy(const char* srcpath,const char* dstpath)
 				sprintf(command,"mv %s %s",temp_spath,temp_tpath);
 				system(command);
 				system("sync");
-				strcpy(temp_tpath,dstpath);
-				strcpy(temp_spath,srcpath);
-
 			}
+			strcpy(temp_tpath,dstpath);
+			strcpy(temp_spath,srcpath);
 		}
 	}
 
